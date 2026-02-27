@@ -47,9 +47,9 @@ export default function GenreRadarChart({ genres }: Props) {
         <Tooltip
           contentStyle={{ background: '#111827', border: '1px solid #374151', borderRadius: 8 }}
           labelStyle={{ color: '#f9fafb', fontSize: 12 }}
-          formatter={(value: number, _: string, props: any) => [
-            `${value}%`,
-            props.payload.fullName,
+          formatter={(value: number | undefined, _: string, props: any) => [
+            value != null ? `${value}%` : '',
+            props?.payload?.fullName ?? '',
           ]}
         />
       </RechartsRadar>
