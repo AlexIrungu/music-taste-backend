@@ -404,7 +404,7 @@ export default function DashboardClient({
               Music Passport
             </h2>
             <p className="text-gray-500 text-xs mb-6">Your shareable music identity card</p>
-            <MusicPassport mlProfile={mlProfile} username={profile.display_name} />
+            <MusicPassport mlProfile={mlData} username={profile.display_name} />
           </div>
         </>
       )}
