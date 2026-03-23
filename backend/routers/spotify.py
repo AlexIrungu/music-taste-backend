@@ -18,6 +18,12 @@ class RefreshRequest(BaseModel):
     refresh_token: str
 
 
+class CreatePlaylistRequest(BaseModel):
+    name: str
+    description: str = ""
+    track_ids: list[str]
+
+
 def extract_token(request: Request) -> str:
     """Read Bearer token directly from request headers."""
     auth = request.headers.get("authorization")
@@ -141,4 +147,42 @@ async def data_pipeline(request: Request, time_range: str = "medium_term"):
             }
             for a in top_artists_data["items"]
         ],
+    }
+
+
+@router.post("/create-playlist")
+async def create_playlist(request: Request, body: CreatePlaylistRequest):
+    """Create a Spotify playlist and add the given tracks to it."""
+    token = extract_token(request)
+
+    try:
+        profile = await spotify_client.get_user_profile(token)
+        user_id = profile["id"]
+    except Exception as e:
+        print(f"[create-playlist] Failed to get profile: {e}")
+        raise HTTPException(status_code=502, detail=f"Profile fetch failed: {e}")
+
+    try:
+        playlist = await spotify_client.create_playlist(
+            access_token=token,
+            user_id=user_id,
+            name=body.name,
+            description=body.description,
+        )
+    except Exception as e:
+        print(f"[create-playlist] Failed to create playlist: {e}")
+        raise HTTPException(status_code=502, detail=f"Playlist creation failed: {e}")
+
+    try:
+        track_uris = [f"spotify:track:{tid}" for tid in body.track_ids]
+        await spotify_client.add_tracks_to_playlist(token, playlist["id"], track_uris)
+    except Exception as e:
+        print(f"[create-playlist] Failed to add tracks: {e}")
+        raise HTTPException(status_code=502, detail=f"Adding tracks failed: {e}")
+
+    return {
+        "playlist_id": playlist["id"],
+        "playlist_url": playlist["external_urls"]["spotify"],
+        "name": playlist["name"],
+        "track_count": len(body.track_ids),
     }

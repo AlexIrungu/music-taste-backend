@@ -77,3 +77,37 @@ async def get_artists(access_token: str, artist_ids: list[str]) -> dict:
         )
         response.raise_for_status()
         return response.json()
+
+
+async def create_playlist(access_token: str, user_id: str, name: str, description: str = "", public: bool = False) -> dict:
+    """Create a new playlist on the user's Spotify account."""
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"{SPOTIFY_API_BASE}/users/{user_id}/playlists",
+            json={"name": name, "description": description, "public": public},
+            headers={
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json",
+            },
+        )
+        if response.status_code >= 400:
+            print(f"[spotify] create_playlist {response.status_code}: {response.text}")
+            response.raise_for_status()
+        return response.json()
+
+
+async def add_tracks_to_playlist(access_token: str, playlist_id: str, track_uris: list[str]) -> dict:
+    """Add tracks to a playlist. Max 100 per request."""
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"{SPOTIFY_API_BASE}/playlists/{playlist_id}/tracks",
+            json={"uris": track_uris[:100]},
+            headers={
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json",
+            },
+        )
+        if response.status_code >= 400:
+            print(f"[spotify] add_tracks {response.status_code}: {response.text}")
+            response.raise_for_status()
+        return response.json()
