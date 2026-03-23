@@ -4,6 +4,8 @@ const SCOPES = [
   "user-read-private",
   "user-read-email",
   "streaming",
+  "playlist-modify-public",
+  "playlist-modify-private",
 ].join(" ")
 
 function getSpotifyAuthUrl() {
